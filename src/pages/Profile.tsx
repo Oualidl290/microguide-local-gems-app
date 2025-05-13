@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,10 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock user data for profile page
 const userData = {
@@ -53,6 +54,7 @@ const userData = {
 const Profile = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     name: userData.name,
@@ -123,11 +125,10 @@ const Profile = () => {
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-4">
                     <div className="h-24 w-24 rounded-full bg-muted overflow-hidden">
-                      <img
-                        src={userData.avatar}
-                        alt={userData.name}
-                        className="h-full w-full object-cover"
-                      />
+                      <Avatar>
+                        <AvatarImage src={userData.avatar} alt={userData.name} />
+                        <AvatarFallback>U</AvatarFallback>
+                      </Avatar>
                     </div>
                     <Button
                       size="icon"
