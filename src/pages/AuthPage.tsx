@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,53 +16,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AuthPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { user, signIn, signUp, signInWithGoogle, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Redirect to dashboard if user is already logged in
+  useEffect(() => {
+    if (user) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // This would be replaced with Supabase authentication once integrated
-    setTimeout(() => {
+    if (!email || !password) {
       toast({
-        title: "Authentication",
-        description: "Please integrate Supabase to enable authentication.",
+        title: "Required fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
       });
-      setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    
+    await signIn(email, password);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // This would be replaced with Supabase authentication once integrated
-    setTimeout(() => {
+    if (!email || !password || !name) {
       toast({
-        title: "Authentication",
-        description: "Please integrate Supabase to enable authentication.",
+        title: "Required fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
       });
-      setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    
+    await signUp(email, password, { full_name: name });
   };
 
-  const handleGoogleAuth = () => {
-    setIsLoading(true);
-
-    // This would be replaced with Supabase Google OAuth once integrated
-    setTimeout(() => {
-      toast({
-        title: "Authentication",
-        description: "Please integrate Supabase to enable Google authentication.",
-      });
-      setIsLoading(false);
-    }, 1000);
+  const handleGoogleAuth = async () => {
+    await signInWithGoogle();
   };
 
   return (
@@ -129,9 +131,9 @@ const AuthPage = () => {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={loading}
                     >
-                      {isLoading ? "Loading..." : "Login"}
+                      {loading ? "Logging in..." : "Login"}
                     </Button>
                     <div className="relative w-full">
                       <div className="absolute inset-0 flex items-center">
@@ -148,7 +150,7 @@ const AuthPage = () => {
                       type="button"
                       className="w-full"
                       onClick={handleGoogleAuth}
-                      disabled={isLoading}
+                      disabled={loading}
                     >
                       <svg
                         className="mr-2 h-4 w-4"
@@ -227,9 +229,9 @@ const AuthPage = () => {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={loading}
                     >
-                      {isLoading ? "Creating account..." : "Create account"}
+                      {loading ? "Creating account..." : "Create account"}
                     </Button>
                     <div className="relative w-full">
                       <div className="absolute inset-0 flex items-center">
@@ -246,7 +248,7 @@ const AuthPage = () => {
                       type="button"
                       className="w-full"
                       onClick={handleGoogleAuth}
-                      disabled={isLoading}
+                      disabled={loading}
                     >
                       <svg
                         className="mr-2 h-4 w-4"
