@@ -12,6 +12,7 @@ import ViewGuide from "./pages/ViewGuide";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
+import DesignSystem from "./pages/DesignSystem";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/design-system" element={<DesignSystem />} />
               <Route 
                 path="/dashboard" 
                 element={
