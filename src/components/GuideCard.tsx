@@ -1,8 +1,7 @@
-
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, MapPin, Star } from "lucide-react";
+import { Edit, MapPin, Star, User } from "lucide-react";
 
 interface GuideCardProps {
   guide: {
