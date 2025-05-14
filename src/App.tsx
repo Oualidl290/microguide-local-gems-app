@@ -13,7 +13,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
 import DesignSystem from "./pages/DesignSystem";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/auth";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();

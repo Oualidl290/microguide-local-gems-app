@@ -1,10 +1,20 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { AuthContextType, Profile, UserWithProfile } from '@/types/auth';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Profile } from '@/types/auth';
+import { AuthContextType, UserWithProfile } from './types';
+import {
+  fetchUserProfile,
+  signInWithEmailPassword,
+  signUpWithEmailPassword,
+  signInWithGoogleOAuth,
+  signOutUser,
+  updateUserProfile,
+  getCurrentSession,
+  subscribeToAuthChanges
+} from './auth-service';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserWithProfile | null>(null);
@@ -17,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("Setting up auth listeners...");
     
     // First, set up the auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = subscribeToAuthChanges(
       async (event, session) => {
         console.log("Auth state changed:", event);
         
@@ -29,25 +39,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           
           // Fetch the user profile
-          try {
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (error) {
-              console.error("Error fetching profile:", error);
-            } else if (data) {
-              console.log("Profile loaded:", data);
-              setProfile(data);
-              setUser(prev => ({
-                ...prev!,
-                profile: data,
-              }));
-            }
-          } catch (error) {
-            console.error("Error in profile fetch:", error);
+          const profileData = await fetchUserProfile(session.user.id);
+          
+          if (profileData) {
+            console.log("Profile loaded:", profileData);
+            setProfile(profileData);
+            setUser(prev => ({
+              ...prev!,
+              profile: profileData,
+            }));
           }
         } else {
           console.log("No active user session");
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkSession = async () => {
       try {
         setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await getCurrentSession();
         
         if (session?.user) {
           console.log("Existing session found:", session.user.id);
@@ -73,18 +73,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           
           // Fetch the user profile
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          const profileData = await fetchUserProfile(session.user.id);
           
-          if (data) {
-            console.log("Profile loaded from existing session:", data);
-            setProfile(data);
+          if (profileData) {
+            console.log("Profile loaded from existing session:", profileData);
+            setProfile(profileData);
             setUser(prev => ({
               ...prev!,
-              profile: data,
+              profile: profileData,
             }));
           }
         } else {
@@ -109,10 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signInWithEmailPassword(email, password);
 
       if (error) {
         throw error;
@@ -138,13 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, userData?: Partial<Profile>) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData,
-        },
-      });
+      const { error } = await signUpWithEmailPassword(email, password, userData);
 
       if (error) {
         throw error;
@@ -170,12 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      const { error } = await signInWithGoogleOAuth();
 
       if (error) {
         throw error;
@@ -195,7 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
+      const { error } = await signOutUser();
 
       if (error) {
         throw error;
@@ -224,27 +206,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (!user) throw new Error("No user logged in");
       
-      const { error } = await supabase
-        .from('profiles')
-        .update(profileData)
-        .eq('id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      // Refresh the profile
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const updatedProfile = await updateUserProfile(user.id, profileData);
       
-      if (data) {
-        setProfile(data);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
         setUser(prev => ({
           ...prev!,
-          profile: data,
+          profile: updatedProfile,
         }));
       }
 
@@ -276,12 +244,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };
