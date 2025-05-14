@@ -12,42 +12,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Enhanced Auth State Management
   useEffect(() => {
-    // Check active sessions and set the user
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email
-        });
-        
-        // Fetch the user profile
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data) {
-          setProfile(data);
-          setUser(prev => ({
-            ...prev!,
-            profile: data,
-          }));
-        }
-      }
-      
-      setLoading(false);
-    };
-
-    getSession();
-
-    // Listen for auth changes
+    console.log("Setting up auth listeners...");
+    
+    // First, set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event);
+        
         if (session?.user) {
+          console.log("User authenticated:", session.user.id);
+          setUser({
+            id: session.user.id,
+            email: session.user.email
+          });
+          
+          // Fetch the user profile
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error("Error fetching profile:", error);
+            } else if (data) {
+              console.log("Profile loaded:", data);
+              setProfile(data);
+              setUser(prev => ({
+                ...prev!,
+                profile: data,
+              }));
+            }
+          } catch (error) {
+            console.error("Error in profile fetch:", error);
+          }
+        } else {
+          console.log("No active user session");
+          setUser(null);
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Then check for existing session
+    const checkSession = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          console.log("Existing session found:", session.user.id);
           setUser({
             id: session.user.id,
             email: session.user.email
@@ -61,6 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .single();
           
           if (data) {
+            console.log("Profile loaded from existing session:", data);
             setProfile(data);
             setUser(prev => ({
               ...prev!,
@@ -68,15 +88,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }));
           }
         } else {
-          setUser(null);
-          setProfile(null);
+          console.log("No existing session found");
         }
-        
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
         setLoading(false);
       }
-    );
+    };
+
+    checkSession();
 
     return () => {
+      console.log("Cleaning up auth listeners");
       subscription?.unsubscribe();
     };
   }, []);
