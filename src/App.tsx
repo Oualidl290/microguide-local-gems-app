@@ -18,7 +18,8 @@ const ViewGuide = lazy(() => import("./pages/ViewGuide"));
 const Profile = lazy(() => import("./pages/Profile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
-const DesignSystem = lazy(() => import("./pages/DesignSystem"));
+const DesignSystem = lazy(() => import("./pages/DesignSystemPage"));
+const MicroGuideDesignSystem = lazy(() => import("./design-system/MicroGuideDesignSystem"));
 
 // Configure the query client with performance optimizations
 const queryClient = new QueryClient({
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/design-system" element={<DesignSystem />} />
+                <Route path="/microguide-design" element={<MicroGuideDesignSystem />} />
                 <Route 
                   path="/dashboard" 
                   element={

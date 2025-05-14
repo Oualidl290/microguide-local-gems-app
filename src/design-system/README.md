@@ -3,6 +3,13 @@
 
 A clean, modern, minimalist design system inspired by Meta UI for the MicroGuide SaaS platform.
 
+## Overview
+
+MicroGuide is a SaaS platform for creating and monetizing local mini-guides (e.g., "Top Coffee Spots in Soho"). This design system supports two roles:
+
+1. **Admin**: Full control over all guides, users, earnings data, ad approvals
+2. **User**: Can sign up, log in, create/edit/delete guides, and track earnings from ads
+
 ## Design Principles
 
 - **Clean & Minimal**: Uncluttered interfaces with plenty of whitespace
@@ -10,6 +17,29 @@ A clean, modern, minimalist design system inspired by Meta UI for the MicroGuide
 - **Responsive**: Mobile-first design approach
 - **Consistent**: Predictable patterns across all interfaces
 - **Accessible**: Designed for users of all abilities
+
+## File Structure
+
+```
+src/
+├── design-system/               # Design system files
+│   ├── MicroGuideDesignSystem.tsx  # Main design system component
+│   ├── ComponentExamples.tsx    # Examples of individual components
+│   ├── ComponentShowcase.tsx    # Component showcase page
+│   ├── DesignTokens.tsx         # Design tokens visualization
+│   ├── RoleBasedUI.tsx          # UI flows for different user roles
+│   └── README.md                # Documentation
+├── components/
+│   ├── ui/                      # UI components
+│   │   ├── button.tsx           
+│   │   ├── card.tsx
+│   │   └── ...
+│   └── layouts/                 # Layout components
+│       ├── MicroGuideSidebar.tsx
+│       └── PageLayout.tsx
+└── styles/
+    └── index.css                # Global styles and variables
+```
 
 ## Design Tokens
 
@@ -23,36 +53,20 @@ A clean, modern, minimalist design system inspired by Meta UI for the MicroGuide
 ### Typography
 
 - **Font Family**: Inter (sans-serif)
-- **Sizes**:
-  - xs: 0.75rem (12px)
-  - sm: 0.875rem (14px)
-  - base: 1rem (16px)
-  - lg: 1.125rem (18px)
-  - xl: 1.25rem (20px)
-  - 2xl: 1.5rem (24px)
-  - 3xl: 1.875rem (30px)
-  - 4xl: 2.25rem (36px)
+- **Sizes**: xs (12px), sm (14px), base (16px), lg (18px), xl (20px), 2xl (24px), 3xl (30px), 4xl (36px)
 
 ### Spacing
 
 - **Scale**: 4px increments
-- **Common values**:
-  - 1: 0.25rem (4px)
-  - 2: 0.5rem (8px)
-  - 3: 0.75rem (12px)
-  - 4: 1rem (16px)
-  - 6: 1.5rem (24px)
-  - 8: 2rem (32px)
-  - 12: 3rem (48px)
-  - 16: 4rem (64px)
+- **Common values**: 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px
 
 ### Border Radius
 
-- **sm**: 0.25rem (4px)
-- **md**: 0.375rem (6px)
-- **lg**: 0.5rem (8px)
-- **xl**: 0.75rem (12px)
-- **2xl**: 1rem (16px)
+- **sm**: 4px
+- **md**: 6px
+- **lg**: 8px
+- **xl**: 12px
+- **2xl**: 16px
 - **full**: 9999px (fully rounded)
 
 ### Shadows
@@ -64,11 +78,9 @@ A clean, modern, minimalist design system inspired by Meta UI for the MicroGuide
 
 ## Components
 
-The design system includes the following components:
-
 ### Navigation
 - Navbar
-- Sidebar
+- MicroGuideSidebar
 - Breadcrumbs
 
 ### Inputs & Controls
@@ -79,8 +91,6 @@ The design system includes the following components:
 - Checkbox
 - Radio
 - Switch
-- Slider
-- Datepicker
 
 ### Display
 - Card
@@ -91,8 +101,7 @@ The design system includes the following components:
 - Toast
 
 ### Layout
-- Grid
-- Flex container
+- PageLayout
 - Container
 - Divider
 
@@ -104,6 +113,23 @@ The design system includes the following components:
 ## Theme Support
 
 The design system supports both light and dark modes, automatically respecting user preferences while allowing manual toggle.
+
+## Role-Based UI Flows
+
+### User Flows
+- Landing Page
+- Auth Pages (Login/Signup)
+- User Dashboard
+- Guide Creation
+- Public Guide Page
+- Earnings Page
+
+### Admin Flows
+- Admin Dashboard
+- Guide Management
+- User Management
+- Ad Management
+- Analytics Overview
 
 ## Usage Guidelines
 
