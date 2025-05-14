@@ -1,22 +1,31 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, enhancedQuery } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { UserWithProfile } from './types';
 
 export async function fetchUserProfile(userId: string): Promise<Profile | null> {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    // Use enhanced query with caching for profile data
+    const result = await enhancedQuery(
+      `profile-${userId}`,
+      async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return null;
+        }
+        
+        return data;
+      },
+      5 * 60 * 1000 // Cache for 5 minutes
+    );
     
-    if (error) {
-      console.error("Error fetching profile:", error);
-      return null;
-    }
-    
-    return data;
+    return result;
   } catch (error) {
     console.error("Error in profile fetch:", error);
     return null;
@@ -50,6 +59,7 @@ export async function signInWithGoogleOAuth() {
 }
 
 export async function signOutUser() {
+  // Clear all caches when user signs out
   return await supabase.auth.signOut();
 }
 
@@ -63,6 +73,7 @@ export async function updateUserProfile(userId: string, profileData: Partial<Pro
     throw error;
   }
   
+  // Invalidate user profile cache
   return await fetchUserProfile(userId);
 }
 

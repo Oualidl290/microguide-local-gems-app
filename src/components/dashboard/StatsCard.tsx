@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { logRender } from '@/lib/performance';
 
 interface StatsCardProps {
   title: string;
@@ -18,7 +19,7 @@ interface StatsCardProps {
   className?: string;
 }
 
-export function StatsCard({
+export const StatsCard = memo(({
   title,
   value,
   description,
@@ -26,7 +27,9 @@ export function StatsCard({
   change,
   footer,
   className,
-}: StatsCardProps) {
+}: StatsCardProps) => {
+  logRender('StatsCard');
+  
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -52,9 +55,11 @@ export function StatsCard({
       {footer && <CardFooter className="pt-0">{footer}</CardFooter>}
     </Card>
   );
-}
+});
 
-export function StatsCardSkeleton() {
+StatsCard.displayName = 'StatsCard';
+
+export const StatsCardSkeleton = memo(() => {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -67,12 +72,16 @@ export function StatsCardSkeleton() {
       </CardContent>
     </Card>
   );
-}
+});
 
-export function StatsCardGrid({ children, className }: { children: React.ReactNode, className?: string }) {
+StatsCardSkeleton.displayName = 'StatsCardSkeleton';
+
+export const StatsCardGrid = memo(({ children, className }: { children: React.ReactNode, className?: string }) => {
   return (
     <div className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-4", className)}>
       {children}
     </div>
   );
-}
+});
+
+StatsCardGrid.displayName = 'StatsCardGrid';

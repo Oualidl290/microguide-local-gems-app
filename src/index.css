@@ -91,19 +91,29 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans;
+    text-rendering: optimizeSpeed;
+  }
+  img, svg {
+    display: block;
+    max-width: 100%;
+  }
+  /* Improve performance with hardware acceleration */
+  .hw-accel {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
   }
 }
 
 @layer components {
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1 hw-accel;
   }
   
   .btn-transition {
-    @apply transition-all duration-200;
+    @apply transition-all duration-200 hw-accel;
   }
   
   .container-padding {

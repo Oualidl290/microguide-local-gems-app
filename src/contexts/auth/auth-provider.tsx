@@ -1,5 +1,5 @@
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/types/auth';
 import { AuthContextType, UserWithProfile } from './types';
@@ -13,6 +13,7 @@ import {
   getCurrentSession,
   subscribeToAuthChanges
 } from './auth-service';
+import { measurePerformance } from '@/lib/performance';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Enhanced Auth State Management
+  // Enhanced Auth State Management with performance monitoring
   useEffect(() => {
     console.log("Setting up auth listeners...");
     
@@ -38,8 +39,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: session.user.email
           });
           
-          // Fetch the user profile
-          const profileData = await fetchUserProfile(session.user.id);
+          // Fetch the user profile with performance measurement
+          const profileData = await measurePerformance('fetchUserProfile', () => 
+            fetchUserProfile(session.user.id)
+          );
           
           if (profileData) {
             console.log("Profile loaded:", profileData);
@@ -63,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkSession = async () => {
       try {
         setLoading(true);
-        const { data: { session } } = await getCurrentSession();
+        const { data: { session } } = await measurePerformance('getCurrentSession', getCurrentSession);
         
         if (session?.user) {
           console.log("Existing session found:", session.user.id);
@@ -93,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    checkSession();
+    measurePerformance('authInitialization', checkSession);
 
     return () => {
       console.log("Cleaning up auth listeners");
@@ -101,8 +104,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Sign in with email and password
-  const signIn = async (email: string, password: string) => {
+  // Memoize sign-in function to prevent unnecessary re-renders
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       setLoading(true);
       const { error } = await signInWithEmailPassword(email, password);
@@ -125,10 +128,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Sign up with email and password
-  const signUp = async (email: string, password: string, userData?: Partial<Profile>) => {
+  // Memoize sign-up function
+  const signUp = useCallback(async (email: string, password: string, userData?: Partial<Profile>) => {
     try {
       setLoading(true);
       const { error } = await signUpWithEmailPassword(email, password, userData);
@@ -151,10 +154,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Sign in with Google
-  const signInWithGoogle = async () => {
+  // Memoize Google sign-in function
+  const signInWithGoogle = useCallback(async () => {
     try {
       setLoading(true);
       const { error } = await signInWithGoogleOAuth();
@@ -171,10 +174,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error signing in with Google:', error);
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Sign out
-  const signOut = async () => {
+  // Memoize sign-out function
+  const signOut = useCallback(async () => {
     try {
       setLoading(true);
       const { error } = await signOutUser();
@@ -197,10 +200,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  // Update profile
-  const updateProfile = async (profileData: Partial<Profile>) => {
+  // Memoize update profile function
+  const updateProfile = useCallback(async (profileData: Partial<Profile>) => {
     try {
       setLoading(true);
       
@@ -230,9 +233,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     profile,
     loading,
@@ -241,7 +245,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     signInWithGoogle,
     updateProfile,
-  };
+  }), [user, profile, loading, signIn, signUp, signOut, signInWithGoogle, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
