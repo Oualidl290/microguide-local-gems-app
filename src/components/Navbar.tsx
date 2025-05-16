@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu, X, UserRound } from "lucide-react";
+import { Menu, X, UserRound, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ type NavbarProps = {
 
 const Navbar = ({ transparent = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
 
   return (
     <header
@@ -51,6 +51,15 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
           >
             Create Guide
           </Link>
+          {isAdmin() && (
+            <Link
+              to="/admin"
+              className="text-sm font-medium btn-transition hover:text-primary flex items-center gap-1"
+            >
+              <Shield className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {user ? (
@@ -85,6 +94,11 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard">Dashboard</Link>
                   </DropdownMenuItem>
+                  {isAdmin() && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={() => signOut()}
@@ -126,6 +140,11 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard">Dashboard</Link>
                 </DropdownMenuItem>
+                {isAdmin() && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => signOut()}
@@ -171,6 +190,15 @@ const Navbar = ({ transparent = false }: NavbarProps) => {
             >
               Create Guide
             </Link>
+            {isAdmin() && (
+              <Link
+                to="/admin"
+                className="block text-sm font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
             <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
               <Button variant="default" size="sm" className="w-full">
                 Sign In

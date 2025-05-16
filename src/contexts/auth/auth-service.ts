@@ -1,6 +1,6 @@
 
-import { supabase, enhancedQuery } from '@/integrations/supabase/client';
-import { Profile } from '@/types/auth';
+import { supabase, enhancedQuery, clearCache } from '@/integrations/supabase/client';
+import { Profile, UserRole } from '@/types/auth';
 import { UserWithProfile } from './types';
 
 export async function fetchUserProfile(userId: string): Promise<Profile | null> {
@@ -28,6 +28,35 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
     return result;
   } catch (error) {
     console.error("Error in profile fetch:", error);
+    return null;
+  }
+}
+
+export async function fetchUserRole(userId: string): Promise<UserRole | null> {
+  try {
+    // Use enhanced query with caching for role data
+    const result = await enhancedQuery(
+      `user-role-${userId}`,
+      async () => {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching user role:", error);
+          return null;
+        }
+        
+        return data?.role || null;
+      },
+      5 * 60 * 1000 // Cache for 5 minutes
+    );
+    
+    return result;
+  } catch (error) {
+    console.error("Error in role fetch:", error);
     return null;
   }
 }
@@ -60,6 +89,7 @@ export async function signInWithGoogleOAuth() {
 
 export async function signOutUser() {
   // Clear all caches when user signs out
+  clearCache();
   return await supabase.auth.signOut();
 }
 

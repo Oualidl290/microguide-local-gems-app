@@ -1,10 +1,10 @@
-
 import { createContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Profile } from '@/types/auth';
+import { Profile, UserRole } from '@/types/auth';
 import { AuthContextType, UserWithProfile } from './types';
 import {
   fetchUserProfile,
+  fetchUserRole,
   signInWithEmailPassword,
   signUpWithEmailPassword,
   signInWithGoogleOAuth,
@@ -20,6 +20,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserWithProfile | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -52,10 +53,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               profile: profileData,
             }));
           }
+          
+          // Fetch the user role
+          const userRole = await fetchUserRole(session.user.id);
+          if (userRole) {
+            console.log("User role loaded:", userRole);
+            setRole(userRole);
+            setUser(prev => ({
+              ...prev!,
+              role: userRole,
+            }));
+          }
         } else {
           console.log("No active user session");
           setUser(null);
           setProfile(null);
+          setRole(null);
         }
         
         setLoading(false);
@@ -84,6 +97,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(prev => ({
               ...prev!,
               profile: profileData,
+            }));
+          }
+          
+          // Fetch the user role
+          const userRole = await fetchUserRole(session.user.id);
+          if (userRole) {
+            console.log("User role loaded from existing session:", userRole);
+            setRole(userRole);
+            setUser(prev => ({
+              ...prev!,
+              role: userRole,
             }));
           }
         } else {
@@ -235,17 +259,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, toast]);
 
+  // Add isAdmin helper function
+  const isAdmin = useCallback(() => {
+    return role === 'admin';
+  }, [role]);
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     user,
     profile,
+    role,
     loading,
     signIn,
     signUp,
     signOut,
     signInWithGoogle,
     updateProfile,
-  }), [user, profile, loading, signIn, signUp, signOut, signInWithGoogle, updateProfile]);
+    isAdmin,
+  }), [user, profile, role, loading, signIn, signUp, signOut, signInWithGoogle, updateProfile, isAdmin]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

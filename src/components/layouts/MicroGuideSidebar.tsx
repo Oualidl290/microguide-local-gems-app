@@ -10,17 +10,23 @@ import {
   BarChart,
   Settings,
   Menu,
-  LogOut
+  LogOut,
+  LayoutDashboard,
+  Users,
+  Cog
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
 
 type SidebarProps = {
   isCollapsed: boolean;
   toggleSidebar: () => void;
-  role: 'user' | 'admin';
 };
 
-export function MicroGuideSidebar({ isCollapsed, toggleSidebar, role = 'user' }: SidebarProps) {
+export function MicroGuideSidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
+  const { user, isAdmin, signOut } = useAuth();
+  const role = isAdmin() ? 'admin' : 'user';
+  
   return (
     <div
       className={cn(
@@ -46,27 +52,80 @@ export function MicroGuideSidebar({ isCollapsed, toggleSidebar, role = 'user' }:
         
         <nav className="flex-1 overflow-auto py-4">
           <div className="px-2 space-y-1">
-            <SidebarItem icon={Home} text="Dashboard" isCollapsed={isCollapsed} />
-            <SidebarItem icon={Map} text="My Guides" isCollapsed={isCollapsed} />
-            <SidebarItem icon={BarChart} text="Earnings" isCollapsed={isCollapsed} />
-            <SidebarItem icon={User} text="Profile" isCollapsed={isCollapsed} />
-            
-            {role === 'admin' && (
+            {role === 'admin' ? (
+              // Admin navigation
               <>
+                <SidebarItem 
+                  icon={LayoutDashboard} 
+                  text="Admin Dashboard" 
+                  to="/admin" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={Users} 
+                  text="Users" 
+                  to="/admin/users" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={Book} 
+                  text="Guides" 
+                  to="/admin/guides" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={BarChart} 
+                  text="Analytics" 
+                  to="/admin/analytics" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={Cog} 
+                  text="Settings" 
+                  to="/admin/settings" 
+                  isCollapsed={isCollapsed} 
+                />
+                
                 <div className={cn(
                   "h-px bg-sidebar-border my-3",
                   isCollapsed ? "mx-2" : "mx-4"
                 )}></div>
-                <div className={cn(
-                  "mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50",
-                  isCollapsed && "sr-only"
-                )}>
-                  Admin
-                </div>
-                <SidebarItem icon={Book} text="All Guides" isCollapsed={isCollapsed} />
-                <SidebarItem icon={User} text="Users" isCollapsed={isCollapsed} />
-                <SidebarItem icon={BarChart} text="Analytics" isCollapsed={isCollapsed} />
-                <SidebarItem icon={Settings} text="Settings" isCollapsed={isCollapsed} />
+                
+                {/* Link to user dashboard */}
+                <SidebarItem 
+                  icon={Home} 
+                  text="User Dashboard" 
+                  to="/dashboard" 
+                  isCollapsed={isCollapsed} 
+                />
+              </>
+            ) : (
+              // User navigation
+              <>
+                <SidebarItem 
+                  icon={Home} 
+                  text="Dashboard" 
+                  to="/dashboard" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={Map} 
+                  text="My Guides" 
+                  to="/my-guides" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={BarChart} 
+                  text="Earnings" 
+                  to="/earnings" 
+                  isCollapsed={isCollapsed} 
+                />
+                <SidebarItem 
+                  icon={User} 
+                  text="Profile" 
+                  to="/profile" 
+                  isCollapsed={isCollapsed} 
+                />
               </>
             )}
           </div>
@@ -74,15 +133,17 @@ export function MicroGuideSidebar({ isCollapsed, toggleSidebar, role = 'user' }:
         
         <div className="mt-auto border-t border-sidebar-border p-2">
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <div className="h-8 w-8 shrink-0 rounded-full bg-sidebar-accent"></div>
+            <div className="h-8 w-8 shrink-0 rounded-full bg-sidebar-accent">
+              {user?.profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+            </div>
             {!isCollapsed && (
               <div className="flex-1 truncate">
-                <div className="text-sm font-medium">John Doe</div>
-                <div className="text-xs text-sidebar-foreground/70">john@example.com</div>
+                <div className="text-sm font-medium">{user?.profile?.full_name || 'User'}</div>
+                <div className="text-xs text-sidebar-foreground/70">{user?.email}</div>
               </div>
             )}
             {!isCollapsed && (
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => signOut()}>
                 <LogOut className="h-4 w-4" />
               </Button>
             )}
@@ -96,13 +157,14 @@ export function MicroGuideSidebar({ isCollapsed, toggleSidebar, role = 'user' }:
 type SidebarItemProps = {
   icon: React.ElementType;
   text: string;
+  to: string;
   isCollapsed: boolean;
 };
 
-function SidebarItem({ icon: Icon, text, isCollapsed }: SidebarItemProps) {
+function SidebarItem({ icon: Icon, text, to, isCollapsed }: SidebarItemProps) {
   return (
     <NavLink
-      to="#"
+      to={to}
       className={({ isActive }) => cn(
         "flex items-center gap-3 rounded-md px-3 py-2",
         "transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
